@@ -1,0 +1,176 @@
+/--
+A fully working 8 bits adder. This is done by:
+
+1) We have XOR, AND and OR gates defined.
+2) Using XOR, AND and OR gates to define a full adder
+3) Connecting 8 full adder to get a 8-bits adder
+4) Verify the correctness using CTL
+--/
+
+MODULE xor_gate(a, b)
+VAR
+    output : {0, 1};
+
+ASSIGN
+    init(output) := 0;
+
+    next(output) := case
+        a=0 & b=0 : 0;
+        a=0 & b=1 : 1;
+        a=1 & b=0 : 1;
+        a=1 & b=1 : 0;
+        TRUE : output;
+    esac;
+
+
+MODULE and_gate(a, b)
+VAR
+    output : {0, 1};
+
+ASSIGN
+    init(output) := 0;
+
+    next(output) := case
+        a=0 & b=0 : 0;
+        a=0 & b=1 : 0;
+        a=1 & b=0 : 0;
+        a=1 & b=1 : 1;
+        TRUE : output;
+    esac;
+
+
+MODULE or_gate(a, b)
+VAR
+    output : {0, 1};
+
+ASSIGN
+    init(output) := 0;
+
+    next(output) := case
+        a=0 & b=0 : 0;
+        a=0 & b=1 : 1;
+        a=1 & b=0 : 1;
+        a=1 & b=1 : 1;
+        TRUE : output;
+    esac;
+
+
+MODULE fulladder_circuit(a, b, cin)
+VAR
+    first_xor : xor_gate(a, b);
+    second_xor : xor_gate(first_xor.output, cin);
+    first_and : and_gate(first_xor.output, cin);
+    second_and : and_gate(a, b);
+    first_or : or_gate(first_and.output, second_and.output);
+
+DEFINE
+    sum := second_xor.output;
+    cout := first_or.output;
+
+
+MODULE eightbits_adder(a_bits, b_bits)
+VAR
+    first_adder : fulladder_circuit(a_bits[0], b_bits[0], 0);
+    second_adder : fulladder_circuit(a_bits[1], b_bits[1], first_adder.cout);
+    third_adder : fulladder_circuit(a_bits[2], b_bits[2], second_adder.cout);
+    fourth_adder : fulladder_circuit(a_bits[3], b_bits[3], third_adder.cout);
+    fifth_adder : fulladder_circuit(a_bits[4], b_bits[4], fourth_adder.cout);
+    sixth_adder : fulladder_circuit(a_bits[5], b_bits[5], fifth_adder.cout);
+    seventh_adder : fulladder_circuit(a_bits[6], b_bits[6], sixth_adder.cout);
+    eighth_adder : fulladder_circuit(a_bits[7], b_bits[7], seventh_adder.cout);
+
+DEFINE
+    sum := first_adder.sum + second_adder.sum*2 + third_adder.sum*4 + fourth_adder.sum*8 + fifth_adder.sum*16 + sixth_adder.sum*32 + seventh_adder.sum*64 + eighth_adder.sum*128;
+    cout := eighth_adder.cout * 256;
+
+
+MODULE main
+
+VAR
+    a_bits : array 0..7 of {0, 1};
+    b_bits : array 0..7 of {0, 1};
+    adder : eightbits_adder(a_bits, b_bits);
+
+ASSIGN
+    -- 0101 1001 = 89
+    init(a_bits[0]) := 1;
+    init(a_bits[1]) := 0;
+    init(a_bits[2]) := 0;
+    init(a_bits[3]) := 1;
+    init(a_bits[4]) := 1;
+    init(a_bits[5]) := 0;
+    init(a_bits[6]) := 1;
+    init(a_bits[7]) := 0;
+
+    -- 0011 1100 = 60
+    init(b_bits[0]) := 0;
+    init(b_bits[1]) := 0;
+    init(b_bits[2]) := 1;
+    init(b_bits[3]) := 1;
+    init(b_bits[4]) := 1;
+    init(b_bits[5]) := 1;
+    init(b_bits[6]) := 0;
+    init(b_bits[7]) := 0;
+
+    next(a_bits[0]) := case
+        TRUE : a_bits[0];
+    esac;
+    next(a_bits[1]) := case
+        TRUE : a_bits[1];
+    esac;
+    next(a_bits[2]) := case
+        TRUE : a_bits[2];
+    esac;
+    next(a_bits[3]) := case
+        TRUE : a_bits[3];
+    esac;
+    next(a_bits[4]) := case
+        TRUE : a_bits[4];
+    esac;
+    next(a_bits[5]) := case
+        TRUE : a_bits[5];
+    esac;
+    next(a_bits[6]) := case
+        TRUE : a_bits[6];
+    esac;
+    next(a_bits[7]) := case
+        TRUE : a_bits[7];
+    esac;
+
+    next(b_bits[0]) := case
+        TRUE : b_bits[0];
+    esac;
+    next(b_bits[1]) := case
+        TRUE : b_bits[1];
+    esac;
+    next(b_bits[2]) := case
+        TRUE : b_bits[2];
+    esac;
+    next(b_bits[3]) := case
+        TRUE : b_bits[3];
+    esac;
+    next(b_bits[4]) := case
+        TRUE : b_bits[4];
+    esac;
+    next(b_bits[5]) := case
+        TRUE : b_bits[5];
+    esac;
+    next(b_bits[6]) := case
+        TRUE : b_bits[6];
+    esac;
+    next(b_bits[7]) := case
+        TRUE : b_bits[7];
+    esac;
+
+
+-- 89 + 60 = 149
+SPEC
+    AF(AG adder.sum = 149);
+
+-- Use the wrong sum to ask for the calculation steps.
+-- We can use it to verify the addition for each bit!
+SPEC
+    AF(AG adder.sum = 150);
+
+SPEC
+    AF(AG adder.cout = 0);
