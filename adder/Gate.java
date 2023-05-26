@@ -220,7 +220,7 @@ class EightBitAdder {
     synchronized (eighthAdder.sum) {
       while(!eighthAdder.sum.done) {
         try {
-          eighthAdder.sum.wait();
+          eighthAdder.sum.wait(1000);
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
@@ -240,7 +240,7 @@ class EightBitAdder {
 
     synchronized (eighthAdder.cout) {
       try {
-        eighthAdder.cout.wait();
+        eighthAdder.cout.wait(1000);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
