@@ -1,3 +1,13 @@
+/*
+ * Each AND, OR, XOR Gate is a extended class of the abstract Gate class.
+ * Each Gate will wait for the left and right input to be ready, before
+ * computing its own value, since each Gate is a thread. It notifies all
+ * other threads waiting for its value.
+ * 
+ * The full adder is a chain of Gates, and the eight bit adder is a chain
+ * of full adder.
+ */
+
 public abstract class Gate extends Thread {
   Gate left_input;
   Gate right_input;
